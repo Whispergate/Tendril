@@ -39,9 +39,20 @@
 *.app
 
 # Build directories
+bin/
+obj/
 build/
 Build/
 build-*/
+bof/build/
+
+# IDE / Visual Studio
+.vs/
+*.suo
+*.user
+*.sln.docstates
+*.userprefs
+*.cache
 
 # CMake generated files
 CMakeFiles/

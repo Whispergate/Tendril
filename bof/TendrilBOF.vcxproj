@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{B2C3D4E5-F6A7-8901-BCDE-F23456789012}</ProjectGuid>
+    <RootNamespace>TendrilBOF</RootNamespace>
+    <ProjectName>TendrilBOF</ProjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ConfigurationType>Makefile</ConfigurationType>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ConfigurationType>Makefile</ConfigurationType>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <NMakeBuildCommandLine>call "$(ProjectDir)build.bat"</NMakeBuildCommandLine>
+    <NMakeCleanCommandLine>call "$(ProjectDir)clean.bat"</NMakeCleanCommandLine>
+    <NMakeReBuildCommandLine>call "$(ProjectDir)clean.bat" &amp;&amp; call "$(ProjectDir)build.bat"</NMakeReBuildCommandLine>
+    <NMakeOutput>$(ProjectDir)build\tendril.x64.o</NMakeOutput>
+    <NMakeIncludeSearchPath>$(ProjectDir)include</NMakeIncludeSearchPath>
+    <NMakePreprocessorDefinitions>BOF;_WIN64</NMakePreprocessorDefinitions>
+    <IntDir>$(ProjectDir)build\</IntDir>
+    <OutDir>$(ProjectDir)build\</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <NMakeBuildCommandLine>call "$(ProjectDir)build.bat"</NMakeBuildCommandLine>
+    <NMakeCleanCommandLine>call "$(ProjectDir)clean.bat"</NMakeCleanCommandLine>
+    <NMakeReBuildCommandLine>call "$(ProjectDir)clean.bat" &amp;&amp; call "$(ProjectDir)build.bat"</NMakeReBuildCommandLine>
+    <NMakeOutput>$(ProjectDir)build\tendril.x64.o</NMakeOutput>
+    <NMakeIncludeSearchPath>$(ProjectDir)include</NMakeIncludeSearchPath>
+    <NMakePreprocessorDefinitions>BOF;_WIN64</NMakePreprocessorDefinitions>
+    <IntDir>$(ProjectDir)build\</IntDir>
+    <OutDir>$(ProjectDir)build\</OutDir>
+  </PropertyGroup>
+  <ItemGroup>
+    <ClInclude Include="include\beacon.h" />
+    <ClInclude Include="include\beacon_gate.h" />
+    <ClInclude Include="include\tendril.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="tendril.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="build.bat" />
+    <None Include="clean.bat" />
+    <None Include="Makefile" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+</Project>

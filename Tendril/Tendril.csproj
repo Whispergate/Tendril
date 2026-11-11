@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Tendril</RootNamespace>
+    <AssemblyName>Tendril</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>none</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants></DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>0</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Management" />
+    <Reference Include="System.ServiceProcess" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+    <Reference Include="Microsoft.CSharp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Core\ITendril.cs" />
+    <Compile Include="Core\TendrilResult.cs" />
+    <Compile Include="Core\ModuleRegistry.cs" />
+    <Compile Include="Modules\ComHijack.cs" />
+    <Compile Include="Modules\WmiSubscription.cs" />
+    <Compile Include="Modules\GhostTask.cs" />
+    <Compile Include="Modules\RegistryRunKey.cs" />
+    <Compile Include="Modules\ScreensaverBackdoor.cs" />
+    <Compile Include="Modules\IFEOInjection.cs" />
+    <Compile Include="Modules\StartupFolder.cs" />
+    <Compile Include="Modules\UserInitMprLogon.cs" />
+    <Compile Include="Modules\DllSideloadEnum.cs" />
+    <Compile Include="Modules\ServiceBinaryHijack.cs" />
+    <Compile Include="Modules\PathDllPlant.cs" />
+    <Compile Include="Modules\AppInitDlls.cs" />
+    <Compile Include="Modules\WinlogonHelper.cs" />
+    <Compile Include="Modules\AccessibilityBackdoor.cs" />
+    <Compile Include="Modules\PowerShellProfile.cs" />
+    <Compile Include="Modules\ScheduledTaskHijack.cs" />
+    <Compile Include="Modules\NetshHelperDll.cs" />
+    <Compile Include="Native\Win32.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Utilities\RegistryUtils.cs" />
+    <Compile Include="Utilities\FileUtils.cs" />
+    <Compile Include="Utilities\OutputUtils.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>
