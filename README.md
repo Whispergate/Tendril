@@ -1,6 +1,6 @@
 # Tendril
 
-Modular persistence toolkit. C# assembly, unified BOF, Mythic command, and Cobalt Strike aggressor. 17 modules, 19/19 tested on live target.
+Modular persistence toolkit. C# assembly, unified BOF, Mythic command, and Cobalt Strike aggressor.
 
 ## Modules
 
