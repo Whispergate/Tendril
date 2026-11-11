@@ -63,6 +63,11 @@
     <Compile Include="Modules\PowerShellProfile.cs" />
     <Compile Include="Modules\ScheduledTaskHijack.cs" />
     <Compile Include="Modules\NetshHelperDll.cs" />
+    <Compile Include="Modules\PortMonitorDll.cs" />
+    <Compile Include="Modules\SecuritySupportProvider.cs" />
+    <Compile Include="Modules\TimeProviderDll.cs" />
+    <Compile Include="Modules\ActiveSetup.cs" />
+    <Compile Include="Modules\BitsJobPersist.cs" />
     <Compile Include="Native\Win32.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

